@@ -16,7 +16,7 @@ class Norska_Integration {
 
 	protected $hook_object;
 
-	function __construct (Norska_Project_Config $config) {
+	function __construct(Norska_Project_Config $config) {
 		$this->norska_config = $config;
 		$this->project = $config->get_project_name();
 		$this->smtp = $config->smtp;
@@ -26,13 +26,13 @@ class Norska_Integration {
 		$this->init_repository();
 	}
 
-	function lock () {
+	function lock() {
 		echo Norska::__('Locked (%s)', $this->project) . PHP_EOL;
 		register_shutdown_function(array ($this, "unlock"));
 		return file_put_contents($this->lock_file(), "locked");
 	}
 
-	function install () {
+	function install() {
 		while ($this->is_locked()) {
 			echo "Waiting " . $this->get_remaining_locktime() . " sec ..." . PHP_EOL;
 			sleep(10);
@@ -70,13 +70,13 @@ class Norska_Integration {
 		echo Norska::__('Installation of "%s" complete', $this->project) . PHP_EOL;
 	}
 
-	function run () {
+	function run() {
 		echo Norska::__('Start Run process (%s)', $this->project) . PHP_EOL;
 		$this->run = shell_exec("php " . $this->run_file());
 		echo Norska::__('Run process complete (%s)', $this->project) . PHP_EOL;
 	}
 
-	function info () {
+	function info() {
 		if (isset($this->svn)) {
 			return $this->svn->info();
 		}
@@ -85,7 +85,7 @@ class Norska_Integration {
 		}
 	}
 
-	function send () {
+	function send() {
 		echo Norska::__('Start Send process (%s)', $this->project) . PHP_EOL;
 		if (isset($this->email)) {
 			require_once dirname(__FILE__) . '/../libraries/phpmailer/class.phpmailer.php';
@@ -120,7 +120,7 @@ class Norska_Integration {
  	/**
  	 * @return string
  	 */
- 	function send_subject () {
+ 	function send_subject() {
 		if (strstr($this->run, "FAILURE")) {
 			$subject = substr($this->run, strpos($this->run, "FAILURE"));
 			$subject = str_replace("\n", " ", $subject);
@@ -140,7 +140,7 @@ class Norska_Integration {
  	/**
  	 * @return string
  	 */
- 	function send_body () {
+ 	function send_body() {
 		$body = $this->info() . "\n\n******\n\n" . $this->run;
 		$result_hook = $this->hook("send_body_after", $body);
 		if ($result_hook !== false) {
@@ -149,7 +149,7 @@ class Norska_Integration {
 		return $body;
 	}
 
- 	function uninstall () {
+ 	function uninstall() {
 		echo Norska::__('Start Uninstall process (%s)', $this->project) . PHP_EOL;
 		$do_uninstall = $this->hook("uninstall_before");
 
@@ -172,31 +172,31 @@ class Norska_Integration {
 		echo Norska::__('Uninstall process complete (%s)', $this->project) . PHP_EOL;
 	}
 
-	function unlock () {
+	function unlock() {
 		echo Norska::__('Unlocked (%s)', $this->project) . PHP_EOL;
 		if (file_exists($this->lock_file())) {
 			return unlink($this->lock_file());
 		}
 	}
 
-	function project_hashed () {
+	function project_hashed() {
 		return md5($this->project);
 	}
 
-	function info_file () {
+	function info_file() {
 		return dirname(__FILE__) . "/../projects/" . $this->project . "/info.php";
 	}
 
-	function run_file () {
+	function run_file() {
 		$result = dirname(__FILE__) . "/../projects/" . $this->project . "/run.php";
 		return $result;
 	}
 
-	function lock_file () {
+	function lock_file() {
 		return "/tmp/" . $this->project_hashed() . "_lock";
 	}
 
-	function is_locked () {
+	function is_locked() {
 		if (file_exists($this->lock_file()) && $this->get_remaining_locktime() > 0) {
 			return true;
 		} else {
@@ -213,7 +213,7 @@ class Norska_Integration {
 		}
 	}
 
-	function get_remaining_locktime () {
+	function get_remaining_locktime() {
 		if (file_exists($this->lock_file())) {
 			return filemtime($this->lock_file()) - time() + self::LOCKED_TIME;
 		} else {
@@ -226,7 +226,7 @@ class Norska_Integration {
 	 * @param mixed $parameters
 	 * @throws Exception
 	 */
-	function hook ($method, $parameters = null) {
+	function hook($method, $parameters = null) {
 		$class_hook = "Norska_" . ucfirst($this->project) . "_Hooks";
 
 		if ($this->hook_object === null) {
