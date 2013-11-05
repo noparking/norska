@@ -4,9 +4,10 @@
 class Norska_Bot {
 	public $project;
 
-	function __construct () {
-		defined('NORSKA_PATH')
-			|| define('NORSKA_PATH', realpath(dirname(__FILE__) . '/../'));
+	private $root_path;
+
+	function __construct ($root_path) {
+		$this->root_path = $root_path;
 	}
 
 	function help () {
@@ -32,7 +33,7 @@ class Norska_Bot {
 
 		require_once dirname(__FILE__) . '/project_config.php';
 
-		$project_path = NORSKA_PATH."/projects/".$parameters['project'];
+		$project_path = $this->root_path."/projects/".$parameters['project'];
 		$norska_config = new Norska_Project_Config($project_path);
 
 		$norska_config->email = $parameters['email'];
@@ -47,7 +48,7 @@ class Norska_Bot {
 		try {
 			$integration->send();
 		} catch (Exception $e) {
-			echo $e->getMessage();
+			echo $e->getMessage()."\n";
 		}
 		$integration->uninstall();
 	}
@@ -61,7 +62,7 @@ class Norska_Bot {
 
 		require_once dirname(__FILE__) . '/project_config.php';
 
-		$project_path = NORSKA_PATH."/projects/".$parameters['project'];
+		$project_path = $this->root_path."/projects/".$parameters['project'];
 		$norska_config = new Norska_Project_Config($project_path);
 
 		$integration = new Norska_Integration($norska_config);

@@ -10,7 +10,8 @@ if (isset($argv)) {
 	$arguments = $_GET;
 }
 
-$bot = new Norska_Bot();
+$root_path = dirname(dirname(dirname(__FILE__)));
+$bot = new Norska_Bot($root_path);
 
 $method = array_shift($arguments);
 if (preg_match("/^--/", $method)) {
