@@ -110,15 +110,6 @@ class Norska_Integration {
 			$email->Subject = $this->send_subject();
 			$email->Body = $this->send_body();
 
-			// DEBUG
-			echo "\n==== START MAIL ====\n";
-
-			echo "Subject: ".$email->Subject."\n";
-			echo "Body:\n";
-			echo $email->Body;
-
-			echo "\n====  END MAIL  ====\n";
-
 			if ($email->Send() !== true) {
 				throw new Exception(Norska::__("Error: Email not send"));
 			}
