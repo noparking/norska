@@ -18,7 +18,7 @@ class Norska_Integration {
 
 	function __construct(Norska_Project_Config $config) {
 		$this->norska_config = $config;
-		$this->project = $config->get_project_name();
+		$this->project = $config->project_name;
 		$this->smtp = $config->smtp;
 		$this->email = $config->email;
 		$this->config = $config->get_config();
@@ -110,6 +110,15 @@ class Norska_Integration {
 			$email->Subject = $this->send_subject();
 			$email->Body = $this->send_body();
 
+			// DEBUG
+			echo "\n==== START MAIL ====\n";
+
+			echo "Subject: ".$email->Subject."\n";
+			echo "Body:\n";
+			echo $email->Body;
+
+			echo "\n====  END MAIL  ====\n";
+
 			if ($email->Send() !== true) {
 				throw new Exception(Norska::__("Error: Email not send"));
 			}
@@ -184,12 +193,15 @@ class Norska_Integration {
 	}
 
 	function info_file() {
-		return dirname(__FILE__) . "/../projects/" . $this->project . "/info.php";
+		return $this->norska_config->project_path."/info.php";
 	}
 
 	function run_file() {
-		$result = dirname(__FILE__) . "/../projects/" . $this->project . "/run.php";
-		return $result;
+		return $this->norska_config->project_path."/run.php";
+	}
+
+	function hooks_file() {
+		return $this->norska_config->project_path."/inc/hooks.inc.php";
 	}
 
 	function lock_file() {
@@ -230,7 +242,7 @@ class Norska_Integration {
 		$class_hook = "Norska_" . ucfirst($this->project) . "_Hooks";
 
 		if ($this->hook_object === null) {
-			$file_hook = dirname(__FILE__) . "/../projects/" . $this->project . "/inc/hooks.inc.php";
+			$file_hook = $this->hooks_file();
 			if (file_exists($file_hook)) {
 				require_once $file_hook;
 				if (class_exists($class_hook)) {

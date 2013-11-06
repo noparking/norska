@@ -10,4 +10,6 @@ require dirname(__FILE__)."/norska.inc.php";
 require dirname(__FILE__)."/repository_svn.inc.php";
 require dirname(__FILE__)."/repository_git.inc.php";
 
+require dirname(__FILE__)."/hooks.inc.php";
+
 require dirname(__FILE__)."/../lang/fr_FR.lang.php";

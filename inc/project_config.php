@@ -3,13 +3,15 @@
 
 class Norska_Project_Config {
 	public $project_path;
+	public $project_name;
 	public $email;
 	public $smtp = null;
 
 	private $config = null;
 
-	function __construct($project_path) {
+	function __construct($project_path, $project_name) {
 		$this->project_path = $project_path;
+		$this->project_name = $project_name;
 	}
 
 	function get_config($key = null) {
@@ -27,11 +29,5 @@ class Norska_Project_Config {
 		}
 
 		return $this->config;
-	}
-
-	function get_project_name() {
-		$parts = explode("/", $this->project_path);
-
-		return $parts[count($parts)-1];
 	}
 }

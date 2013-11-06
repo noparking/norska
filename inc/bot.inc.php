@@ -34,7 +34,11 @@ class Norska_Bot {
 		require_once dirname(__FILE__) . '/project_config.php';
 
 		$project_path = $this->root_path."/projects/".$parameters['project'];
-		$norska_config = new Norska_Project_Config($project_path);
+		$project_name = $parameters['project'];
+		if (isset($parameters['project_name'])) {
+			$project_name = $parameters['project_name'];
+		}
+		$norska_config = new Norska_Project_Config($project_path, $project_name);
 
 		$norska_config->email = $parameters['email'];
 		if (isset($parameters['smtp'])) {
@@ -63,7 +67,11 @@ class Norska_Bot {
 		require_once dirname(__FILE__) . '/project_config.php';
 
 		$project_path = $this->root_path."/projects/".$parameters['project'];
-		$norska_config = new Norska_Project_Config($project_path);
+		$project_name = $parameters['project'];
+		if (isset($parameters['project_name'])) {
+			$project_name = $parameters['project_name'];
+		}
+		$norska_config = new Norska_Project_Config($project_path, $project_name);
 
 		$integration = new Norska_Integration($norska_config);
 		$integration->unlock();
