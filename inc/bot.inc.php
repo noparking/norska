@@ -13,10 +13,8 @@ class Norska_Bot {
 	function help () {
 		$help = Norska::__("Methods available with Norska_Bot:") . "\n";
 		$ReflectionClass = new ReflectionClass("Norska_Bot");
-		foreach ($ReflectionClass->getMethods() as $method)
-		{
-			if (!in_array($method->getName(), array ("help", "__construct")))
-			{
+		foreach ($ReflectionClass->getMethods() as $method) {
+			if (!in_array($method->getName(), array ("help", "__construct"))) {
 				$help .= "--" . $method->getName() . "\n";
 			}
 		}

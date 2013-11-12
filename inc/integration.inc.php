@@ -27,20 +27,20 @@ class Norska_Integration {
 	}
 
 	function lock() {
-		echo Norska::__('Locked (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Locked (%s)", $this->project).PHP_EOL;
 		register_shutdown_function(array ($this, "unlock"));
 		return file_put_contents($this->lock_file(), "locked");
 	}
 
 	function install() {
 		while ($this->is_locked()) {
-			echo "Waiting " . $this->get_remaining_locktime() . " sec ..." . PHP_EOL;
+			echo "Waiting ".$this->get_remaining_locktime()." sec ...".PHP_EOL;
 			sleep(10);
 		}
 
 		$this->lock();
 
-		echo Norska::__('Start Installation of "%s"...', $this->project) . PHP_EOL;
+		echo Norska::__("Start Installation of \"%s\"...", $this->project).PHP_EOL;
 
 		$this->hook("install_before");
 
@@ -67,13 +67,13 @@ class Norska_Integration {
 
 		$this->hook("install_after");
 
-		echo Norska::__('Installation of "%s" complete', $this->project) . PHP_EOL;
+		echo Norska::__("Installation of \"%s\" complete", $this->project).PHP_EOL;
 	}
 
 	function run() {
-		echo Norska::__('Start Run process (%s)', $this->project) . PHP_EOL;
-		$this->run = shell_exec("php " . $this->run_file());
-		echo Norska::__('Run process complete (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Start Run process (%s)", $this->project).PHP_EOL;
+		$this->run = shell_exec("php ".$this->run_file());
+		echo Norska::__("Run process complete (%s)", $this->project).PHP_EOL;
 	}
 
 	function info() {
@@ -86,9 +86,9 @@ class Norska_Integration {
 	}
 
 	function send() {
-		echo Norska::__('Start Send process (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Start Send process (%s)", $this->project).PHP_EOL;
 		if (isset($this->email)) {
-			require_once dirname(__FILE__) . '/../libraries/phpmailer/class.phpmailer.php';
+			require_once dirname(__FILE__).'/../libraries/phpmailer/class.phpmailer.php';
 
 			$email = new PHPMailer();
 			if ($this->smtp !== null)
@@ -114,7 +114,7 @@ class Norska_Integration {
 				throw new Exception(Norska::__("Error: Email not send"));
 			}
 		}
-		echo Norska::__('Send process complete (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Send process complete (%s)", $this->project).PHP_EOL;
 	}
 
  	/**
@@ -141,7 +141,7 @@ class Norska_Integration {
  	 * @return string
  	 */
  	function send_body() {
-		$body = $this->info() . "\n\n******\n\n" . $this->run;
+		$body = $this->info()."\n\n******\n\n".$this->run;
 		$result_hook = $this->hook("send_body_after", $body);
 		if ($result_hook !== false) {
 			$body = $result_hook;
@@ -150,7 +150,7 @@ class Norska_Integration {
 	}
 
  	function uninstall() {
-		echo Norska::__('Start Uninstall process (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Start Uninstall process (%s)", $this->project).PHP_EOL;
 		$do_uninstall = $this->hook("uninstall_before");
 
 		if (isset($this->svn) and $do_uninstall !== false) {
@@ -169,11 +169,11 @@ class Norska_Integration {
 		}
 
 		$this->hook("uninstall_after");
-		echo Norska::__('Uninstall process complete (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Uninstall process complete (%s)", $this->project).PHP_EOL;
 	}
 
 	function unlock() {
-		echo Norska::__('Unlocked (%s)', $this->project) . PHP_EOL;
+		echo Norska::__("Unlocked (%s)", $this->project).PHP_EOL;
 		if (file_exists($this->lock_file())) {
 			return unlink($this->lock_file());
 		}
@@ -181,10 +181,6 @@ class Norska_Integration {
 
 	function project_hashed() {
 		return md5($this->project);
-	}
-
-	function info_file() {
-		return $this->norska_config->project_path."/info.php";
 	}
 
 	function run_file() {
@@ -196,7 +192,7 @@ class Norska_Integration {
 	}
 
 	function lock_file() {
-		return "/tmp/" . $this->project_hashed() . "_lock";
+		return "/tmp/".$this->project_hashed()."_lock";
 	}
 
 	function is_locked() {
@@ -230,7 +226,7 @@ class Norska_Integration {
 	 * @throws Exception
 	 */
 	function hook($method, $parameters = null) {
-		$class_hook = "Norska_" . ucfirst($this->project) . "_Hooks";
+		$class_hook = "Norska_".ucfirst($this->project)."_Hooks";
 
 		if ($this->hook_object === null) {
 			$file_hook = $this->hooks_file();
