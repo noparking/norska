@@ -29,8 +29,6 @@ class Norska_Bot {
 			$parameters[$elements[0]] = $elements[1];
 		}
 
-		require_once dirname(__FILE__) . '/project_config.php';
-
 		$project_path = $this->root_path."/projects/".$parameters['project'];
 		$project_name = $parameters['project'];
 		if (isset($parameters['project_name'])) {

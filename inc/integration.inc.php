@@ -131,7 +131,7 @@ class Norska_Integration {
 		}
 		$result_hook = $this->hook("send_subject_after", $subject);
 
-		if ($result_hook !== false) {
+		if ($result_hook !== false and $result_hook !== null) {
 			$subject = $result_hook;
 		}
 		return $subject;
