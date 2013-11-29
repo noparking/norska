@@ -97,7 +97,7 @@ class Norska_Repository_Svn {
 	}
 
 	function exec($command, $options = "") {
-		$cmd = "svn " . $command . " --username " . $this->repository['user'] . " --password " . $this->repository['pass'];
+		$cmd = "svn " . $command . " --no-auth-cache --non-interactive --username " . $this->repository['user'] . " --password " . $this->repository['pass'];
 
 		if ($command != "update") {
 			$cmd .= " " . $this->repository['url'];
