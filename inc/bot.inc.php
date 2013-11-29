@@ -63,8 +63,11 @@ class Norska_Bot {
 		$project_names = array();
 
 		foreach (scandir($projects_dir) as $entry) {
-			if ($entry != "." and $entry != ".." and is_dir($projects_dir."/".$entry)) {
-				$project_names[] = $entry;
+			$project_path = $projects_dir."/".$entry;
+			if ($entry != "." and $entry != ".." and is_dir($project_path)) {
+				if (file_exists($project_path."/cfg/config.cfg.php")) {
+					$project_names[] = $entry;
+				}
 			}
 		}
 
