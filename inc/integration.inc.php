@@ -28,10 +28,12 @@ class Norska_Integration {
 
 	function init_repository() {
 		if (isset($this->config['svn'])) {
-			$this->svn = new Norska_Repository_Svn($this->config['svn']);
+			$svn_path = $this->config['parameters']['svn'];
+			$this->svn = new Norska_Repository_Svn($svn_path, $this->config['svn']);
 		}
 		if (isset($this->config['git'])) {
-			$this->git = new Norska_Repository_Git($this->config['git']);
+			$git_path = $this->config['parameters']['git'];
+			$this->git = new Norska_Repository_Git($git_path, $this->config['git']);
 		}
 	}
 

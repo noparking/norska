@@ -2,9 +2,11 @@
 /* Norska -- Copyright (C) No Parking 2013 - 2013 */
 
 class Norska_Repository_Git {
+	private $git_path;
 	private $repository = array();
 
-	function __construct($repository) {
+	function __construct($git_path, $repository) {
+		$this->git_path = $git_path;
 		$this->repository = $repository;
 	}
 
@@ -62,7 +64,7 @@ class Norska_Repository_Git {
 
 		$subcommand = $args[0];
 
-		$command = "git ";
+		$command = $this->git_path." ";
 		$command .= implode(" ", $args);
 
 		$old_dir = getcwd();

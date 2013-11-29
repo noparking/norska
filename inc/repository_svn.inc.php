@@ -2,11 +2,13 @@
 /* Norska -- Copyright (C) No Parking 2013 - 2013 */
 
 class Norska_Repository_Svn {
+	private $svn_path;
 	private $repository = array();
 
 	private $number_revision;
 
-	function __construct($repository) {
+	function __construct($svn_path, $repository) {
+		$this->svn_path = $svn_path;
 		$this->repository = $repository;
 		$this->repository['md5'] = md5($this->repository['url']);
 		$this->number_revision();
@@ -97,7 +99,7 @@ class Norska_Repository_Svn {
 	}
 
 	function exec($command, $options = "") {
-		$cmd = "svn " . $command . " --no-auth-cache --non-interactive --username " . $this->repository['user'] . " --password " . $this->repository['pass'];
+		$cmd = $this->svn_path." " . $command . " --no-auth-cache --non-interactive --username " . $this->repository['user'] . " --password " . $this->repository['pass'];
 
 		if ($command != "update") {
 			$cmd .= " " . $this->repository['url'];
