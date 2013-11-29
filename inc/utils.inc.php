@@ -4,10 +4,6 @@
 function array_merge_smart() {
 	$args = func_get_args();
 
-	if (count($args) == 1) {
-		return $args[0];
-	}
-
 	$arr = array();
 
 	foreach ($args as $arg) {
