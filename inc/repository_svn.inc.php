@@ -13,7 +13,8 @@ class Norska_Repository_Svn {
 	}
 
 	function info() {
-		$logentry = simplexml_load_string($this->exec("log", "-r " . $this->number_revision() . " -v --xml"));
+		$data = $this->exec("log", "-r " . $this->number_revision() . " -v --xml");
+		$logentry = simplexml_load_string($data);
 		foreach ($logentry->xpath("//logentry[@revision='" . $this->number_revision() . "']") as $log) {
 			$message = Norska::__("Author: %s", array ($log->author)) . "\n";
 			$message .= Norska::__("Date: %s", array (date("d/m/Y à H:i", strtotime($log->date)))) . "\n";
@@ -29,21 +30,44 @@ class Norska_Repository_Svn {
 
 	function number_revision() {
 		if (!isset($this->number_revision)) {
-			$xml = simplexml_load_string($this->exec("info", "--xml"));
+			$data = $this->exec("info", "--xml");
+			$xml = simplexml_load_string($data);
 			if ($xml === false) {
 				$this->repository['revision'] = Norska::__("unknown");
 			} else {
 				$rev = $xml->xpath("//info/entry/commit");
 				$this->repository['revision'] = $rev[0]['revision'];
 			}
-			$this->number_revision = $this->repository['revision'];
+			$this->number_revision = (int)$this->repository['revision'];
 		}
 		return $this->number_revision;
 	}
 
+	function commit_timestamp($commit_id) {
+		if (!isset($this->timestamp_revision)) {
+			$data = $this->exec("info", "--xml");
+			$xml = simplexml_load_string($data);
+			if ($xml === false) {
+				$this->repository['timestamp'] = 0;
+			} else {
+				$date = $xml->xpath("//info/entry/commit/date");
+				list(, $date) = each($date);
+				$this->repository['timestamp'] = strtotime($date);
+			}
+
+			$this->timestamp_revision = (int)$this->repository['timestamp'];
+		}
+
+		return $this->timestamp_revision;
+	}
+
 	function install($path, $revision = 0) {
 		$revision = $revision ? $revision : $this->repository['revision'];
-		return $this->exec("export --force", "-r " . $revision . " " . $path);
+		return $this->exec("checkout", "--force -r " . $revision . " " . $path);
+	}
+
+	function update($path) {
+		return $this->exec("update", $path);
 	}
 
 	function uninstall($path) {
@@ -73,7 +97,12 @@ class Norska_Repository_Svn {
 	}
 
 	function exec($command, $options = "") {
-		$cmd = "svn " . $command . " --username " . $this->repository['user'] . " --password " . $this->repository['pass'] . " " . $this->repository['url'];
+		$cmd = "svn " . $command . " --username " . $this->repository['user'] . " --password " . $this->repository['pass'];
+
+		if ($command != "update") {
+			$cmd .= " " . $this->repository['url'];
+		}
+
 		$cmd .= $options ? " " . $options : "";
 
 		return shell_exec($cmd);

@@ -9,7 +9,7 @@ class Norska_Integration {
 	public $info;
 	public $config;
 
-	protected $norska_config;
+	public $norska_config;
 
 	protected $smtp = null;
 	protected $email = null;
@@ -26,10 +26,26 @@ class Norska_Integration {
 		$this->init_repository();
 	}
 
+	function init_repository() {
+		if (isset($this->config['svn'])) {
+			$this->svn = new Norska_Repository_Svn($this->config['svn']);
+		}
+		if (isset($this->config['git'])) {
+			$this->git = new Norska_Repository_Git($this->config['git']);
+		}
+	}
+
 	function lock() {
 		echo Norska::__("Locked (%s)", $this->project).PHP_EOL;
 		register_shutdown_function(array ($this, "unlock"));
 		return file_put_contents($this->lock_file(), "locked");
+	}
+
+	function unlock() {
+		if (file_exists($this->lock_file())) {
+			echo Norska::__("Unlocked (%s)", $this->project).PHP_EOL;
+			return unlink($this->lock_file());
+		}
 	}
 
 	function install() {
@@ -44,36 +60,167 @@ class Norska_Integration {
 
 		$this->hook("install_before");
 
-		if (isset($this->config['svn'])) {
-			if (!isset($this->svn)) {
-				$this->svn = new Norska_Repository_Svn($this->config['svn']);
-			}
+		if (isset($this->svn)) {
 			$this->svn->install($this->config['parameters']['path']);
 		}
 
-		if (isset($this->config['git'])) {
-			if (!isset($this->git)) {
-				$this->git = new Norska_Repository_Git($this->config['git']);
-			}
+		if (isset($this->git)) {
 			$this->git->install($this->config['parameters']['path']);
 		}
 
+		$this->hook("install_after");
+
+		echo Norska::__("Installation of \"%s\" complete", $this->project).PHP_EOL;
+		$this->unlock();
+	}
+
+	function install_db() {
 		if (isset($this->config['mysql'])) {
 			if (!isset($this->mysql)) {
 				$this->mysql = new Norska_Database_Mysql($this->config['mysql']);
 			}
 			$this->mysql->install();
 		}
+	}
 
-		$this->hook("install_after");
+	function update() {
+		while ($this->is_locked()) {
+			echo "Waiting ".$this->get_remaining_locktime()." sec ...".PHP_EOL;
+			sleep(10);
+		}
 
-		echo Norska::__("Installation of \"%s\" complete", $this->project).PHP_EOL;
+		$this->lock();
+
+		echo Norska::__("Start update of \"%s\"...", $this->project).PHP_EOL;
+
+		if (isset($this->svn)) {
+			$this->svn->update($this->config['parameters']['path']);
+		}
+
+		if (isset($this->git)) {
+			$this->git->update($this->config['parameters']['path']);
+		}
+
+		echo Norska::__("update of \"%s\" complete", $this->project).PHP_EOL;
+		$this->unlock();
+	}
+
+	function uninstall() {
+		echo Norska::__("Start Uninstall process (%s)", $this->project).PHP_EOL;
+		$do_uninstall = $this->hook("uninstall_before");
+
+		if (isset($this->svn) and $do_uninstall !== false) {
+			$this->svn->uninstall($this->config['parameters']['path']);
+		}
+
+		if (isset($this->git) and $do_uninstall !== false) {
+			$this->git->uninstall($this->config['parameters']['path']);
+		}
+
+		$this->hook("uninstall_after");
+		echo Norska::__("Uninstall process complete (%s)", $this->project).PHP_EOL;
+	}
+
+	function uninstall_db() {
+		if (isset($this->config['mysql'])) {
+			if (!isset($this->mysql)) {
+				$this->mysql = new Norska_Database_Mysql($this->config['mysql']);
+			}
+			$this->mysql->uninstall();
+		}
+	}
+
+	function do_update() {
+		if (!$this->is_installed()) {
+			$this->install();
+		} else {
+			$this->update();
+		}
+
+		$last_commit_id = $this->last_commit_id();
+		$last_commit_timestamp = (int)$this->last_commit_timestamp();
+
+		return array($last_commit_id, $last_commit_timestamp);
+	}
+
+	function is_installed() {
+		return file_exists($this->config['parameters']['path']);
 	}
 
 	function run() {
 		echo Norska::__("Start Run process (%s)", $this->project).PHP_EOL;
-		$this->run = shell_exec("php ".$this->run_file());
+		$this->install_db();
+
+		$cmd = "php ".$this->run_file();
+		$timeout = $this->config['parameters']['timeout'];
+
+		$stdout = "";
+		$stderr = "";
+		$this->execute($cmd, null, $stdout, $stderr, $timeout);
+
+		$this->run .= "-----> STDOUT".PHP_EOL;
+		$this->run .= $stdout.PHP_EOL;
+
+		$this->run .= "-----> STDERR".PHP_EOL;
+		$this->run .= $stderr.PHP_EOL;
+
+		$this->uninstall_db();
 		echo Norska::__("Run process complete (%s)", $this->project).PHP_EOL;
+	}
+
+	function execute($cmd, $stdin = null, &$stdout, &$stderr, $timeout = false) {
+		echo "Running (timeout={$timeout}s): {$cmd}".PHP_EOL;
+
+		$pipes = array();
+		$descriptors = array(
+			array("pipe", "r"),
+			array("pipe", "w"),
+			array("pipe", "w"),
+		);
+		$process = proc_open($cmd, $descriptors, $pipes);
+
+		$start = time();
+		$stdout = "";
+		$stderr = "";
+
+		if (is_resource($process)) {
+			stream_set_blocking($pipes[0], 0);
+			stream_set_blocking($pipes[1], 0);
+			stream_set_blocking($pipes[2], 0);
+
+			fwrite($pipes[0], $stdin);
+			fclose($pipes[0]);
+		}
+
+		while (is_resource($process)) {
+			$stdout .= stream_get_contents($pipes[1]);
+
+			$stderr_content = stream_get_contents($pipes[2]);
+			$stderr .= $stderr_content;
+			fwrite(STDERR, $stderr_content);
+
+			$cur = time();
+			$diff = $cur - $start;
+
+			if ($timeout !== false and $diff > $timeout) {
+				$stderr .= "Timeout ({$timeout}s).".PHP_EOL;
+				proc_terminate($process, 9);
+				return 1;
+			}
+
+			$status = proc_get_status($process);
+			if (!$status['running']) {
+				fclose($pipes[1]);
+				fclose($pipes[2]);
+				proc_close($process);
+
+				return $status['exitcode'];
+			}
+
+			usleep(1 * 1000000); // 1s
+		}
+
+		return 1;
 	}
 
 	function info() {
@@ -82,6 +229,24 @@ class Norska_Integration {
 		}
 		if (isset($this->git)) {
 			return $this->git->info($this->config['parameters']['path']);
+		}
+	}
+
+	function last_commit_id() {
+		if (isset($this->svn)) {
+			return $this->svn->number_revision();
+		}
+		if (isset($this->git)) {
+			return $this->git->commit_id($this->config['parameters']['path']);
+		}
+	}
+
+	function last_commit_timestamp() {
+		if (isset($this->svn)) {
+			return $this->svn->commit_timestamp($this->last_commit_id());
+		}
+		if (isset($this->git)) {
+			return $this->git->commit_timestamp($this->config['parameters']['path'], $this->last_commit_id());
 		}
 	}
 
@@ -126,6 +291,8 @@ class Norska_Integration {
 			$subject = str_replace("\n", " ", $subject);
 		} elseif (strstr($this->run, "OK")) {
 			$subject = "SUCCESS !!!";
+		} elseif (strstr($this->run, "Timeout")) {
+			$subject = "TIMEOUT";
 		} else {
 			$subject = "INCONNU";
 		}
@@ -149,36 +316,6 @@ class Norska_Integration {
 		return $body;
 	}
 
- 	function uninstall() {
-		echo Norska::__("Start Uninstall process (%s)", $this->project).PHP_EOL;
-		$do_uninstall = $this->hook("uninstall_before");
-
-		if (isset($this->svn) and $do_uninstall !== false) {
-			$this->svn->uninstall($this->config['parameters']['path']);
-		}
-
-		if (isset($this->git) and $do_uninstall !== false) {
-			$this->git->uninstall($this->config['parameters']['path']);
-		}
-
-		if (isset($this->config['mysql']) and $do_uninstall !== false) {
-			if (!isset($this->mysql)) {
-				$this->mysql = new Norska_Database_Mysql($this->config['mysql']);
-			}
-			$this->mysql->uninstall();
-		}
-
-		$this->hook("uninstall_after");
-		echo Norska::__("Uninstall process complete (%s)", $this->project).PHP_EOL;
-	}
-
-	function unlock() {
-		echo Norska::__("Unlocked (%s)", $this->project).PHP_EOL;
-		if (file_exists($this->lock_file())) {
-			return unlink($this->lock_file());
-		}
-	}
-
 	function project_hashed() {
 		return md5($this->project);
 	}
@@ -200,15 +337,6 @@ class Norska_Integration {
 			return true;
 		} else {
 			return false;
-		}
-	}
-
-	function init_repository() {
-		if (isset($this->config['svn'])) {
-			$this->svn = new Norska_Repository_Svn($this->config['svn']);
-		}
-		if (isset($this->config['git'])) {
-			$this->git = new Norska_Repository_Git($this->config['git']);
 		}
 	}
 

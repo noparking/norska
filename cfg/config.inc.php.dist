@@ -1,0 +1,9 @@
+<?php
+/* Norska -- Copyright (C) No Parking 2013 - 2013 */
+
+$config = array(
+	'parameters' => array(
+		'check_interval'	=> 30, // Intervalle (en secondes) entre chaque checks. (defaut=30s)
+		'timeout'			=> 1 * 60, // Temps (en secondes) de timeout. (defaut=1m)
+	),
+);

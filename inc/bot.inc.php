@@ -34,8 +34,8 @@ class Norska_Bot {
 		if (isset($parameters['project_name'])) {
 			$project_name = $parameters['project_name'];
 		}
-		$norska_config = new Norska_Project_Config($project_path, $project_name);
 
+		$norska_config = new Norska_Project_Config($project_path, $project_name);
 		$norska_config->email = $parameters['email'];
 		if (isset($parameters['smtp'])) {
 			$norska_config->smtp = $parameters['smtp'];
@@ -43,14 +43,60 @@ class Norska_Bot {
 
 		$integration = new Norska_Integration($norska_config);
 
-		$integration->install();
+		$integration->do_update();
 		$integration->run();
 		try {
 			$integration->send();
 		} catch (Exception $e) {
-			echo $e->getMessage()."\n";
+			echo $e->getMessage().PHP_EOL;
 		}
-		$integration->uninstall();
+	}
+
+	function integrate_last($arguments) {
+		$parameters = array ();
+		foreach ($arguments as $value) {
+			$elements = explode("=", $value);
+			$parameters[$elements[0]] = $elements[1];
+		}
+
+		$projects_dir = $this->root_path."/projects";
+		$project_names = array();
+
+		foreach (scandir($projects_dir) as $entry) {
+			if ($entry != "." and $entry != ".." and is_dir($projects_dir."/".$entry)) {
+				$project_names[] = $entry;
+			}
+		}
+
+		$projects = new Norska_Projects($projects_dir, $project_names);
+		$projects->email = $parameters['email'];
+		$projects->load();
+		$projects->sort();
+
+		foreach ($projects->projects as $project) {
+			if ($project->norska_config->need_update()) {
+				list($last_commit_id, $last_commit_timestamp) = $project->do_update();
+
+				$meta_last_commit_id = isset($project->norska_config->meta['last_commit_id']) ? $project->norska_config->meta['last_commit_id'] : null;
+
+				if ($last_commit_id != $meta_last_commit_id) {
+					$project->run();
+					try {
+						$project->send();
+					} catch (Exception $e) {
+						echo $e->getMessage().PHP_EOL;
+					}
+
+					$project->norska_config->meta['last_commit_id'] = $last_commit_id;
+					$project->norska_config->meta['last_commit_timestamp'] = $last_commit_timestamp;
+
+					$project->norska_config->save_meta();
+					break;
+				}
+			}
+
+			$project->norska_config->save_meta();
+		}
 	}
 
 	function unlock($arguments) {

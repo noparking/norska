@@ -18,10 +18,18 @@ class Norska_Repository_Git {
 		}
 	}
 
+	function update($path) {
+		return $this->exec($path, "pull");
+	}
+
 	function commit_id($path) {
 		$commit_id = $this->exec($path, "rev-parse", "HEAD");
 
 		return trim($commit_id);
+	}
+
+	function commit_timestamp($path, $commit_id) {
+		return $this->exec($path, "log", "-n 1", "--pretty=format:'%ct'", $commit_id);
 	}
 
 	function info($path) {
@@ -55,13 +63,16 @@ class Norska_Repository_Git {
 		$subcommand = $args[0];
 
 		$command = "git ";
-
-		if ($subcommand != "clone") {
-			$command .= "--git-dir=".$path.".git ";
-		}
-
 		$command .= implode(" ", $args);
+
+		$old_dir = getcwd();
+
+		@mkdir($path, 0755, true);
+		chdir($path);
+
 		$result = shell_exec($command);
+
+		chdir($old_dir);
 
 		return $result;
 	}
