@@ -5,7 +5,12 @@ class Norska_Repository_Git {
 	private $git_path;
 	private $repository = array();
 
-	function __construct($git_path, $repository) {
+	function __construct($repository, $git_path = null) {
+		if ($git_path === null) {
+			include dirname(__FILE__)."/../cfg/config.inc.php";
+			$git_path = $config['parameters']['git'];
+		}
+
 		$this->git_path = $git_path;
 		$this->repository = $repository;
 	}

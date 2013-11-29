@@ -7,7 +7,12 @@ class Norska_Repository_Svn {
 
 	private $number_revision;
 
-	function __construct($svn_path, $repository) {
+	function __construct($repository, $svn_path = null) {
+		if ($svn_path === null) {
+			include dirname(__FILE__)."/../cfg/config.inc.php";
+			$svn_path = $config['parameters']['svn'];
+		}
+
 		$this->svn_path = $svn_path;
 		$this->repository = $repository;
 		$this->repository['md5'] = md5($this->repository['url']);
