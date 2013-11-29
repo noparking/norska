@@ -46,7 +46,7 @@ class Norska_Project_Config {
 	}
 
 	function meta_filename() {
-		return $this->project_path."/.norska_meta.json";
+		return $this->project_path."/norska_meta.json";
 	}
 
 	function load_meta() {
