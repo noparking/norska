@@ -6,7 +6,7 @@ require_once dirname(__FILE__)."/../inc/require.inc.php";
 class tests_Norska_Integration extends NorskaTestCase {
 	function test_run() {
 		$this->integration->run();
-		$this->assertEqual($this->integration->run, "Hello world!");
+		$this->assertPattern("/Hello world!/", $this->integration->run);
 	}
 
 	function test_send_subject() {
