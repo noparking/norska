@@ -153,7 +153,8 @@ class Norska_Integration {
 		echo Norska::__("Start Run process (%s)", $this->project).PHP_EOL;
 		$this->install_db();
 
-		$cmd = "php ".$this->run_file();
+		$php_path = $this->config['parameters']['php'];
+		$cmd = $php_path." ".$this->run_file();
 		$timeout = $this->config['parameters']['timeout'];
 
 		$stdout = "";
@@ -205,7 +206,9 @@ class Norska_Integration {
 			$diff = $cur - $start;
 
 			if ($timeout !== false and $diff > $timeout) {
-				$stderr .= "Timeout ({$timeout}s).".PHP_EOL;
+				$timeout_msg = "Timeout ({$timeout}s).".PHP_EOL;
+				$stderr .= $timeout_msg;
+				fwrite(STDERR, $timeout_msg);
 				proc_terminate($process, 9);
 				return 1;
 			}

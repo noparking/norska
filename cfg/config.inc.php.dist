@@ -7,5 +7,6 @@ $config = array(
 		'timeout'			=> 1 * 60, // Temps (en secondes) de timeout. (defaut=1m)
 		'svn'				=> "/usr/local/bin/svn", // Chemin vers SVN
 		'git'				=> "/usr/local/bin/git", // Chemin vers Git
+		'php'				=> "/usr/local/bin/php", // Chemin vers PHP
 	),
 );
