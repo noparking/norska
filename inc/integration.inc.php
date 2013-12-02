@@ -290,7 +290,16 @@ class Norska_Integration {
  	 */
  	function send_subject() {
 		if (strstr($this->run, "FAILURE")) {
-			$subject = substr($this->run, strpos($this->run, "FAILURE"));
+			$start = strpos($this->run, "FAILURE");
+
+			$chunk = substr($this->run, $start);
+			$end = strpos($chunk, "\n");
+			if ($end === false) {
+				$subject = substr($this->run, $start);
+			} else {
+				$subject = substr($this->run, $start, $end);
+			}
+
 			$subject = str_replace("\n", " ", $subject);
 		} elseif (strstr($this->run, "OK")) {
 			$subject = "SUCCESS !!!";

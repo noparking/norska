@@ -5,13 +5,18 @@ require_once dirname(__FILE__)."/../inc/require.inc.php";
 
 class tests_Norska_Integration extends NorskaTestCase {
 	function test_run() {
-		$this->integration->run();
-		$this->assertPattern("/Hello world!/", $this->integration->run);
+		if (defined("STDERR")) {
+			$this->integration->run();
+			$this->assertPattern("/Hello world!/", $this->integration->run);
+		}
 	}
 
 	function test_send_subject() {
 		$this->integration->run = "[???] FAILURE test";
 		$this->assertEqual($this->integration->send_subject(), "FAILURE test");
+
+		$this->integration->run = "[???] FAILURE long test contenant beaucoup\nde lignes inutiles";
+		$this->assertEqual($this->integration->send_subject(), "FAILURE long test contenant beaucoup");
 
 		$this->integration->run = "[???] OK tests passed";
 		$this->assertEqual($this->integration->send_subject(), "SUCCESS !!!");
