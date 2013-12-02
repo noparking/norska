@@ -172,8 +172,6 @@ class Norska_Integration {
 	}
 
 	function execute($cmd, $stdin = null, &$stdout, &$stderr, $timeout = false) {
-		echo "Running (timeout={$timeout}s): {$cmd}".PHP_EOL;
-
 		$pipes = array();
 		$descriptors = array(
 			array("pipe", "r"),
