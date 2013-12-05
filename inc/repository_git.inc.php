@@ -27,7 +27,8 @@ class Norska_Repository_Git {
 
 	function update($path) {
 		$this->exec($path, "reset", "--hard");
-		return $this->exec($path, "pull");
+		$this->exec($path, "pull");
+		$this->exec($path, "submodule", "update", "--init", "--recursive");
 	}
 
 	function commit_id($path) {
