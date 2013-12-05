@@ -26,6 +26,7 @@ class Norska_Repository_Git {
 	}
 
 	function update($path) {
+		$this->exec($path, "reset", "--hard");
 		return $this->exec($path, "pull");
 	}
 
